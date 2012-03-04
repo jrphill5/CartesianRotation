@@ -6,6 +6,7 @@
 
 using namespace std;
 
+bool initplot();
 void plot( const char* command);
 void printv( double* v );
 void printm( double* m );
@@ -19,31 +20,18 @@ void drawv( int id, const char* color, double* v );
 const double pi = 3.141592653589793;
 
 void sighandler(int sig);
-FILE* gnuplot;
+FILE* gnuplot = NULL;
 
 int main()
 {
 
-	gnuplot = popen("gnuplot -geometry 600x600 - > /dev/null 2>&1","w");
-	//plot("set term postscript eps color");
-	plot("set xlabel \"x\" offset first 0,3,0");
-	plot("set xrange[-3:3]");
-	plot("set ylabel \"y\" offset first 3,0,0");
-	plot("set yrange[-3:3]");
-	plot("set zlabel \"z\" offset first 0,0,1.5");
-	plot("set zrange[0:3]");
-	plot("set view equal_axes xyz");
-	plot("set view 60,135");
-	plot("unset key");
-	plot("unset border");
-	plot("set ticslevel 0");
-	plot("set zeroaxis lw 2 lt 1 lc rgb \"#000000\"");
-	plot("set xtics axis nomirror");
-	plot("set ytics axis nomirror");
-	plot("set ztics axis nomirror");
-	plot("f(x,y) = -1");
-	plot("splot f(x,y)");
-	plot("replot");
+	if ( !initplot() )
+	{
+
+		printf("Plot initialization failed!\n");
+		return 1;
+
+	}
 
 	double r = 1.0;
 	double a0 = 0;
@@ -159,6 +147,40 @@ int main()
 	}
 
 	return 0;
+
+}
+
+bool initplot()
+{
+
+	if ( gnuplot == NULL )
+	{
+
+		gnuplot = popen("gnuplot -geometry 600x600 - > /dev/null 2>&1","w");
+		if ( gnuplot == NULL ) return false;
+		//plot("set term postscript eps color");
+		plot("set xlabel \"x\" offset first 3,0,0");
+		plot("set xrange[-3:3]");
+		plot("set ylabel \"y\" offset first 0,3,0");
+		plot("set yrange[-3:3]");
+		plot("set zlabel \"z\" offset first 0,0,1.5");
+		plot("set zrange[0:3]");
+		plot("set view equal_axes xyz");
+		plot("set view 60,135");
+		plot("unset key");
+		plot("unset border");
+		plot("set ticslevel 0");
+		plot("set zeroaxis lw 2 lt 1 lc rgb \"#000000\"");
+		plot("set xtics axis nomirror");
+		plot("set ytics axis nomirror");
+		plot("set ztics axis nomirror");
+		plot("f(x,y) = -1");
+		plot("splot f(x,y)");
+		plot("replot");
+		return true;
+
+	}
+	else return false;
 
 }
 
