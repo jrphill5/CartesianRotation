@@ -7,6 +7,7 @@
 using namespace std;
 
 bool initplot();
+void top();
 void plot( const char* command);
 void printv( double* v );
 void printm( double* m );
@@ -15,12 +16,30 @@ double* unitv( double* v );
 double length( double* v );
 double* transform( double* m, double* v );
 double* transpose( double* m );
-void drawv( int id, const char* color, double* v );
+void drawv( int id, const char* color, double* o, double* v );
 
 const double pi = 3.141592653589793;
 
 void sighandler(int sig);
 FILE* gnuplot = NULL;
+
+double r = 1.0;
+double th = pi/4.0;
+double ph = pi/2.0;
+
+double xi = 1.0;
+double yi = 1.0;
+double zi = 0.0;
+
+double a0 = 0;
+double b0 = pi/6.0;
+double c0 = 0;
+
+double* vector;
+double orig[3] = { xi, yi, zi };
+double xhat[3] = { 1.0, 0.0, 0.0 };
+double yhat[3] = { 0.0, 1.0, 0.0 };
+double zhat[3] = { 0.0, 0.0, 1.0 };
 
 int main()
 {
@@ -33,17 +52,15 @@ int main()
 
 	}
 
-	double r = 1.0;
-	double a0 = 0;
-	double b0 = pi/6.0;
-	double c0 = 0;
-
-	double xhat[3] = { 1.0, 0.0, 0.0 };
-	double yhat[3] = { 0.0, 1.0, 0.0 };
-	double zhat[3] = { 0.0, 0.0, 1.0 };
-
-	double* vector;
 	vector = (double*) calloc(3, sizeof(double));
+
+	double vect[3] = { orig[0] + r*sin(th)*cos(ph),
+	                   orig[1] + r*sin(th)*sin(ph),
+	                   orig[2] + r*cos(th)          };
+
+	drawv( 1, "#000000", orig, vect );
+
+	top();
 
 /*	double rotA[]   = {  cos(a), -sin(a),  0.0,
 	                     sin(a),  cos(a),  0.0,
@@ -65,86 +82,6 @@ int main()
 	                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
 	                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };*/
 
-	int speed = 0;
-
-	while ( speed < 1 || speed > 100 )
-	{
-
-		printf("speed: ");
-		scanf("%d",&speed);
-
-	}
-
-	int kmax = 100;
-	int jmax = 1;
-	int imax = 100;
-	while ( true )
-	for ( int k = 0; k < kmax; k++ )
-	{
-
-		double a = a0 + 2.0*pi/kmax * k;
-
-		double rotA[]   = {  cos(a), -sin(a),  0.0,
-		                     sin(a),  cos(a),  0.0,
-		                     0.0,     0.0,     1.0     };	
-
-		vector = transform( rotA, xhat );
-		drawv( 11, "#FF0000", vector );
-
-		vector = transform( rotA, yhat );
-		drawv( 12, "#FF0000", vector );
-
-		vector = transform( rotA, zhat );
-		drawv( 13, "#FF0000", vector );
-
-		for ( int j = 0; j < jmax; j++ )
-		{
-
-			double b = b0 + 2.0*pi/jmax * j;
-
-			double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
-			                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
-			                    -sin(b),         0.0,     cos(b)  };
-
-
-			vector = transform( rotAB, xhat );
-			drawv( 21, "#00FF00", vector );
-
-			vector = transform( rotAB, yhat );
-			drawv( 22, "#00FF00", vector );
-
-			vector = transform( rotAB, zhat );
-			drawv( 23, "#00FF00", vector );
-
-			for ( int i = 0; i < imax; i++ )
-			{
-
-				double c = c0 + 2.0*pi/imax * i;
-
-				double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
-				                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
-				                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };
-
-				vector = transform( rotABC, xhat );
-				drawv( 31, "#0000FF", vector );
-
-				vector = transform( rotABC, yhat );
-				drawv( 32, "#0000FF", vector );
-
-				vector = transform( rotABC, zhat );
-				drawv( 33, "#0000FF", vector );
-
-				plot("replot");
-
-				usleep( 750*(100 - speed) );
-
-				signal(2, &sighandler);
-
-			}
-
-		}
-
-	}
 
 	return 0;
 
@@ -171,9 +108,9 @@ bool initplot()
 		plot("unset border");
 		plot("set ticslevel 0");
 		plot("set zeroaxis lw 2 lt 1 lc rgb \"#000000\"");
-		plot("set xtics axis nomirror");
-		plot("set ytics axis nomirror");
-		plot("set ztics axis nomirror");
+		plot("set xtics 1 axis nomirror");
+		plot("set ytics 1 axis nomirror");
+		plot("set ztics 1 axis nomirror");
 		plot("f(x,y) = -1");
 		plot("splot f(x,y)");
 		plot("replot");
@@ -181,6 +118,101 @@ bool initplot()
 
 	}
 	else return false;
+
+}
+
+void top()
+{
+
+	r = 1.0;
+	a0 = 0.0;
+	b0 = pi/6.0;
+	c0 = 0.0;
+
+	int speed = 0;
+
+	orig[0] = 0.0;
+	orig[1] = 0.0;
+	orig[2] = 0.0;
+
+	while ( speed < 1 || speed > 100 )
+	{
+
+		printf("speed: ");
+		scanf("%d",&speed);
+
+	}
+
+	int kmax = 100;
+	int jmax = 1;
+	int imax = 100;
+	while ( true )
+	for ( int k = 0; k < kmax; k++ )
+	{
+
+		double a = a0 + 2.0*pi/kmax * k;
+
+		double rotA[]   = {  cos(a), -sin(a),  0.0,
+		                     sin(a),  cos(a),  0.0,
+		                     0.0,     0.0,     1.0     };	
+
+		vector = transform( rotA, xhat );
+		drawv( 11, "#FF0000", orig, vector );
+
+		vector = transform( rotA, yhat );
+		drawv( 12, "#FF0000", orig, vector );
+
+		vector = transform( rotA, zhat );
+		drawv( 13, "#FF0000", orig, vector );
+
+		for ( int j = 0; j < jmax; j++ )
+		{
+
+			double b = b0 + 2.0*pi/jmax * j;
+
+			double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
+			                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
+			                    -sin(b),         0.0,     cos(b)  };
+
+
+			vector = transform( rotAB, xhat );
+			drawv( 21, "#00FF00", orig, vector );
+
+			vector = transform( rotAB, yhat );
+			drawv( 22, "#00FF00", orig, vector );
+
+			vector = transform( rotAB, zhat );
+			drawv( 23, "#00FF00", orig, vector );
+
+			for ( int i = 0; i < imax; i++ )
+			{
+
+				double c = c0 + 2.0*pi/imax * i;
+
+				double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
+				                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
+				                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };
+
+				vector = transform( rotABC, xhat );
+				drawv( 31, "#0000FF", orig, vector );
+
+				vector = transform( rotABC, yhat );
+				drawv( 32, "#0000FF", orig, vector );
+
+				vector = transform( rotABC, zhat );
+				drawv( 33, "#0000FF", orig, vector );
+
+				plot("replot");
+
+				usleep( 750*(100 - speed) );
+
+				signal(2, &sighandler);
+
+			}
+
+		}
+
+	}
 
 }
 
@@ -283,11 +315,11 @@ double* transpose( double* m )
 
 }
 
-void drawv( int id, const char* color, double* v )
+void drawv( int id, const char* color, double* o, double* v )
 {
 
 	char command[128];
-	sprintf(command,"set arrow %d from 0,0,0 to %f,%f,%f lc rgb \"%s\"", id, v[0],v[1],v[2], color);
+	sprintf(command,"set arrow %d from %f,%f,%f to %f,%f,%f lc rgb \"%s\"", id, o[0],o[1],o[2], v[0],v[1],v[2], color);
 	plot(command);
 
 }
