@@ -27,16 +27,12 @@ double r = 1.0;
 double th = pi/4.0;
 double ph = pi/2.0;
 
-double xi = 1.0;
-double yi = 1.0;
-double zi = 0.0;
-
 double a0 = 0;
 double b0 = pi/6.0;
 double c0 = 0;
 
 double* vector;
-double orig[3] = { xi, yi, zi };
+double orig[3] = { 1.0, 1.0, 1.0 };
 double xhat[3] = { 1.0, 0.0, 0.0 };
 double yhat[3] = { 0.0, 1.0, 0.0 };
 double zhat[3] = { 0.0, 0.0, 1.0 };
