@@ -8,6 +8,9 @@ using namespace std;
 
 bool initplot();
 void top();
+void systemA( double a );
+void systemAB( double a, double b );
+void systemABC( double a, double b, double c );
 void plot( const char* command);
 void printv( double* v );
 void printm( double* m );
@@ -32,7 +35,7 @@ double b0 = pi/6.0;
 double c0 = 0;
 
 double* vector;
-double orig[3] = { 1.0, 1.0, 1.0 };
+double* origin;
 double xhat[3] = { 1.0, 0.0, 0.0 };
 double yhat[3] = { 0.0, 1.0, 0.0 };
 double zhat[3] = { 0.0, 0.0, 1.0 };
@@ -49,35 +52,22 @@ int main()
 	}
 
 	vector = (double*) calloc(3, sizeof(double));
+	origin = (double*) calloc(3, sizeof(double));
 
-	double vect[3] = { orig[0] + r*sin(th)*cos(ph),
-	                   orig[1] + r*sin(th)*sin(ph),
-	                   orig[2] + r*cos(th)          };
+	origin[0] = 1.0;
+	origin[1] = 0.0;
+	origin[2] = 0.0;
 
-	drawv( 1, "#000000", orig, vect );
+	double vect[3] = { origin[0] + r*sin(th)*cos(ph),
+	                   origin[1] + r*sin(th)*sin(ph),
+	                   origin[2] + r*cos(th)          };
 
+	drawv( 1, "#000000", origin, vect );
+	plot( "replot" );
 	top();
 
-/*	double rotA[]   = {  cos(a), -sin(a),  0.0,
-	                     sin(a),  cos(a),  0.0,
-	                     0.0,     0.0,     1.0     };*/
-
-/*	double rotB[]   = {  cos(b),  0.0,     sin(b),
-	                     0.0,     1.0,     0.0,
-	                    -sin(b),  0.0,     cos(b)  };*/
-
-/*	double rotC[]   = {  cos(c), -sin(c),  0.0,
-	                     sin(c),  cos(c),  0.0,
-	                     0.0,     0.0,     1.0     };*/
-
-/*	double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
-	                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
-	                    -sin(b),         0.0,     cos(b)  };*/
-
-/*	double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
-	                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
-	                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };*/
-
+	while ( true )
+		signal(2, &sighandler);
 
 	return 0;
 
@@ -120,16 +110,15 @@ bool initplot()
 void top()
 {
 
-	r = 1.0;
 	a0 = 0.0;
 	b0 = pi/6.0;
 	c0 = 0.0;
 
-	int speed = 0;
+	origin[0] = 0.0;
+	origin[1] = 0.0;
+	origin[2] = 0.0;
 
-	orig[0] = 0.0;
-	orig[1] = 0.0;
-	orig[2] = 0.0;
+	int speed = 0;
 
 	while ( speed < 1 || speed > 100 )
 	{
@@ -142,73 +131,94 @@ void top()
 	int kmax = 100;
 	int jmax = 1;
 	int imax = 100;
+
 	while ( true )
-	for ( int k = 0; k < kmax; k++ )
 	{
 
-		double a = a0 + 2.0*pi/kmax * k;
-
-		double rotA[]   = {  cos(a), -sin(a),  0.0,
-		                     sin(a),  cos(a),  0.0,
-		                     0.0,     0.0,     1.0     };	
-
-		vector = transform( rotA, xhat );
-		drawv( 11, "#FF0000", orig, vector );
-
-		vector = transform( rotA, yhat );
-		drawv( 12, "#FF0000", orig, vector );
-
-		vector = transform( rotA, zhat );
-		drawv( 13, "#FF0000", orig, vector );
-
-		for ( int j = 0; j < jmax; j++ )
+		for ( int k = 0; k < kmax; k++ )
 		{
 
-			double b = b0 + 2.0*pi/jmax * j;
+			double a = a0 + 2.0*pi/kmax * k;
+			systemA( a );
 
-			double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
-			                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
-			                    -sin(b),         0.0,     cos(b)  };
-
-
-			vector = transform( rotAB, xhat );
-			drawv( 21, "#00FF00", orig, vector );
-
-			vector = transform( rotAB, yhat );
-			drawv( 22, "#00FF00", orig, vector );
-
-			vector = transform( rotAB, zhat );
-			drawv( 23, "#00FF00", orig, vector );
-
-			for ( int i = 0; i < imax; i++ )
+			for ( int j = 0; j < jmax; j++ )
 			{
 
-				double c = c0 + 2.0*pi/imax * i;
+				double b = b0 + 2.0*pi/jmax * j;
+				systemAB( a, b );
 
-				double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
-				                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
-				                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };
+				for ( int i = 0; i < imax; i++ )
+				{
 
-				vector = transform( rotABC, xhat );
-				drawv( 31, "#0000FF", orig, vector );
+					double c = c0 + 2.0*pi/imax * i;
+					systemABC( a, b, c );
+					plot("replot");
 
-				vector = transform( rotABC, yhat );
-				drawv( 32, "#0000FF", orig, vector );
+					usleep( 750*(100 - speed) );
+					signal(2, &sighandler);
 
-				vector = transform( rotABC, zhat );
-				drawv( 33, "#0000FF", orig, vector );
-
-				plot("replot");
-
-				usleep( 750*(100 - speed) );
-
-				signal(2, &sighandler);
+				}
 
 			}
 
 		}
 
 	}
+
+}
+
+void systemA( double a )
+{
+
+	double rotA[]   = {  cos(a), -sin(a),  0.0,
+	                     sin(a),  cos(a),  0.0,
+	                     0.0,     0.0,     1.0     };	
+
+	vector = transform( rotA, xhat );
+	drawv( 11, "#FF0000", origin, vector );
+
+	vector = transform( rotA, yhat );
+	drawv( 12, "#FF0000", origin, vector );
+
+	vector = transform( rotA, zhat );
+	drawv( 13, "#FF0000", origin, vector );
+
+}
+
+void systemAB( double a, double b )
+{
+
+	double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
+	                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
+	                    -sin(b),         0.0,     cos(b)  };
+
+
+	vector = transform( rotAB, xhat );
+	drawv( 21, "#00FF00", origin, vector );
+
+	vector = transform( rotAB, yhat );
+	drawv( 22, "#00FF00", origin, vector );
+
+	vector = transform( rotAB, zhat );
+	drawv( 23, "#00FF00", origin, vector );
+
+}
+
+void systemABC( double a, double b, double c )
+{
+
+	double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
+	                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
+	                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };
+
+	vector = transform( rotABC, xhat );
+	drawv( 31, "#0000FF", origin, vector );
+
+	vector = transform( rotABC, yhat );
+	drawv( 32, "#0000FF", origin, vector );
+
+	vector = transform( rotABC, zhat );
+	drawv( 33, "#0000FF", origin, vector );
 
 }
 
