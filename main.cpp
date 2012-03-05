@@ -55,14 +55,16 @@ int main()
 	origin = (double*) calloc(3, sizeof(double));
 
 	origin[0] = 1.0;
-	origin[1] = 0.0;
-	origin[2] = 0.0;
+	origin[1] = 1.0;
+	origin[2] = 1.0;
 
 	double vect[3] = { origin[0] + r*sin(th)*cos(ph),
 	                   origin[1] + r*sin(th)*sin(ph),
 	                   origin[2] + r*cos(th)          };
 
-	drawv( 1, "#000000", origin, vect );
+	double o[3] = {0.0,0.0,0.0};
+
+	drawv( 1, "#000000", o, origin );
 	plot( "replot" );
 	top();
 
@@ -113,10 +115,6 @@ void top()
 	a0 = 0.0;
 	b0 = pi/6.0;
 	c0 = 0.0;
-
-	origin[0] = 0.0;
-	origin[1] = 0.0;
-	origin[2] = 0.0;
 
 	int speed = 0;
 
@@ -325,7 +323,7 @@ void drawv( int id, const char* color, double* o, double* v )
 {
 
 	char command[128];
-	sprintf(command,"set arrow %d from %f,%f,%f to %f,%f,%f lc rgb \"%s\"", id, o[0],o[1],o[2], v[0],v[1],v[2], color);
+	sprintf(command,"set arrow %d from %f,%f,%f to %f,%f,%f lc rgb \"%s\"", id, o[0],o[1],o[2], o[0]+v[0],o[1]+v[1],o[2]+v[2], color);
 	plot(command);
 
 }
