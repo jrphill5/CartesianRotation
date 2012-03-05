@@ -1,0 +1,24 @@
+Rotate coordinate system around z-axis by angle a:
+A[]   = {  ca, -sa,  0,
+           sa,  ca,  0,
+           0,   0,   1  };
+
+Rotate coordinate system around x-axis by angle b:
+B[]   = {  cb,  0,  sb,
+           0,   1,  0,
+          -sb,  0,  cb  };
+
+Rotate coordinate system around z-axis by angle c:
+C[]   = {  cc, -sc,  0,
+           sc,  cc,  0,
+           0,   0,   1  };
+
+Rotate usg both A and B rotation matrices:
+AB[]  = {  ca*cb, -sa,  ca*sb,
+           sa*cb,  ca,  sa*sb,
+          -sb,     0,   cb     };
+
+Rotate usg A, B, and C rotation matrices:
+ABC[] = {  ca*cb*cc - sa*sc, -sa*cc - ca*cb*sc,  ca*sb,
+           sa*cb*cc + ca*sc,  ca*cc - sa*cb*sc,  sa*sb,
+          -sb*cc,             sb*sc,             cb     };
