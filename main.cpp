@@ -37,7 +37,7 @@ double th = pi/6.0;
 double ph = pi/4.0;
 
 double a, a0 = 0;
-double b, b0 = pi/6.0;
+double b, b0 = pi/8.0;
 double c, c0 = 0;
 
 double* vector;
@@ -117,7 +117,7 @@ int main()
 
 			double r2 = r;
 			double a2 = 2.0*pi/max * j;
-			double b2 = ph;
+			double b2 = th;
 
 			tier2[0] = r2*sin(b2)*cos(a2);
 			tier2[1] = r2*sin(b2)*sin(a2);
