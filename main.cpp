@@ -71,15 +71,6 @@ int main()
 
 	zerov( origin );
 
-	double o[3] = {0.0,0.0,0.0};
-
-	drawv( 1, "#000000", o, origin );
-	plot( "replot" );
-	top();
-
-	while ( true )
-		signal(2, &sighandler);
-
 	trunk[0] = origin[0];
 	trunk[1] = origin[1];
 	trunk[2] = origin[2] + r;
@@ -160,6 +151,15 @@ int main()
 
 	}
 	
+	while ( true )
+		signal(2, &sighandler);
+
+	double o[3] = {0.0,0.0,0.0};
+
+	drawv( 1, "#000000", o, origin );
+	plot( "replot" );
+	top();
+
 	while ( true )
 		signal(2, &sighandler);
 
@@ -291,15 +291,18 @@ void systemAB( double a, double b, double dx, double dy, double dz, const char* 
 
 	vector = transform( rotAB, xhat );
 	vector[0] += dx; vector[1] += dy; vector[2] += dz;
-	drawv( 21, color, origin, vector );
+//	drawv( 21, color, origin, vector );
+	drawv( 0, color, origin, vector );
 
 	vector = transform( rotAB, yhat );
 	vector[0] += dx; vector[1] += dy; vector[2] += dz;
-	drawv( 22, color, origin, vector );
+//	drawv( 22, color, origin, vector );
+	drawv( 0, color, origin, vector );
 
 	vector = transform( rotAB, zhat );
 	vector[0] += dx; vector[1] += dy; vector[2] += dz;
-	drawv( 23, color, origin, vector );
+//	drawv( 23, color, origin, vector );
+	drawv( 0, color, origin, vector );
 
 }
 
