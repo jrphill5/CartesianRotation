@@ -6,36 +6,47 @@
 
 using namespace std;
 
-bool initplot();
 void top();
-void systemA( double a );
-void systemAB( double a, double b );
-void systemABC( double a, double b, double c );
+
+void systemA(   double a,                     double dx, double dy, double dz, const char* color );
+void systemAB(  double a, double b,           double dx, double dy, double dz, const char* color );
+void systemABC( double a, double b, double c, double dx, double dy, double dz, const char* color );
+
+bool initplot();
 void plot( const char* command);
+
 void printv( double* v );
 void printm( double* m );
-double dot( double* v1, double* v2 );
+void drawv( int id, const char* color, double* o, double* v );
+
+double dotv( double* v1, double* v2 );
 double* unitv( double* v );
-double length( double* v );
+double magv( double* v );
+void zerov( double* v );
+
 double* transform( double* m, double* v );
 double* transpose( double* m );
-void drawv( int id, const char* color, double* o, double* v );
 
 const double pi = 3.141592653589793;
 
 void sighandler(int sig);
 FILE* gnuplot = NULL;
 
-double r = 1.0;
-double th = pi/4.0;
-double ph = pi/2.0;
+double r  = 1.0;
+double th = pi/6.0;
+double ph = pi/4.0;
 
-double a0 = 0;
-double b0 = pi/6.0;
-double c0 = 0;
+double a, a0 = 0;
+double b, b0 = pi/6.0;
+double c, c0 = 0;
 
 double* vector;
 double* origin;
+
+double* trunk;
+double* tier1;
+double* tier2;
+
 double xhat[3] = { 1.0, 0.0, 0.0 };
 double yhat[3] = { 0.0, 1.0, 0.0 };
 double zhat[3] = { 0.0, 0.0, 1.0 };
@@ -54,13 +65,11 @@ int main()
 	vector = (double*) calloc(3, sizeof(double));
 	origin = (double*) calloc(3, sizeof(double));
 
-	origin[0] = 1.0;
-	origin[1] = 1.0;
-	origin[2] = 1.0;
+	trunk = (double*) calloc(3, sizeof(double));
+	tier1 = (double*) calloc(3, sizeof(double));
+	tier2 = (double*) calloc(3, sizeof(double));
 
-	double vect[3] = { origin[0] + r*sin(th)*cos(ph),
-	                   origin[1] + r*sin(th)*sin(ph),
-	                   origin[2] + r*cos(th)          };
+	zerov( origin );
 
 	double o[3] = {0.0,0.0,0.0};
 
@@ -68,6 +77,89 @@ int main()
 	plot( "replot" );
 	top();
 
+	while ( true )
+		signal(2, &sighandler);
+
+	trunk[0] = origin[0];
+	trunk[1] = origin[1];
+	trunk[2] = origin[2] + r;
+
+	drawv( 0, "#000000", origin, trunk );
+
+	double rotAB[]  = {  cos(ph)*cos(th), -sin(ph),  cos(ph)*sin(th),
+	                     sin(ph)*cos(th),  cos(ph),  sin(ph)*sin(th),
+	                    -sin(th),          0.0,      cos(th)  };
+
+	int max = 3;
+	for ( int i = 0; i < max; i++ )
+	{
+
+		double r1 = r;
+		double a1 = 2.0*pi/max * i;
+		double b1 = th;
+
+		tier1[0] = 0.0;
+		tier1[1] = 0.0;
+		tier1[2] = r1;
+
+		double dx = trunk[0];
+		double dy = trunk[1];
+		double dz = trunk[2];
+
+		double rotAB1[]  = {  cos(a1)*cos(b1), -sin(a1),  cos(a1)*sin(b1),
+		                      sin(a1)*cos(b1),  cos(a1),  sin(a1)*sin(b1),
+		                     -sin(b1),          0.0,      cos(b1)  };
+
+		systemAB( a1, b1, dx, dy, dz, "#00FF00" );
+
+		vector = transform( rotAB1, tier1 );
+		vector[0] += dx; vector[1] += dy; vector[2] += dz;
+		drawv( 100*(i + 1), "#000000", trunk, vector );
+		plot( "replot" );
+
+		tier1[0] = vector[0];
+		tier1[1] = vector[1];
+		tier1[2] = vector[2];
+
+		for ( int j = 0; j < max; j++ )
+		{
+
+			double r2 = r;
+			double a2 = 2.0*pi/max * j;
+			double b2 = ph;
+
+			tier2[0] = r2*sin(b2)*cos(a2);
+			tier2[1] = r2*sin(b2)*sin(a2);
+			tier2[2] = r2*cos(b2);
+
+			double dx = tier1[0];
+			double dy = tier1[1];
+			double dz = tier1[2];
+
+			double rotAB2[]  = {  cos(a2)*cos(b2), -sin(a2),  cos(a2)*sin(b2),
+			                      sin(a2)*cos(b2),  cos(a2),  sin(a2)*sin(b2),
+			                     -sin(b2),          0.0,      cos(b2)          };
+
+			systemAB( a1, b1, dx, dy, dz, "#FF0000" );
+
+			vector = transform( rotAB1, tier2 );
+			vector[0] += dx; vector[1] += dy; vector[2] += dz;
+			drawv( 100*(i + 1)+10*(j + 1), "#0000FF", tier1, vector );
+			plot( "replot" );
+
+			tier2[0] = vector[0];
+			tier2[1] = vector[1];
+			tier2[2] = vector[2];
+
+			for ( int k = 0; k < max; k++ )
+			{
+
+			}
+
+		}			
+
+	}
+	
 	while ( true )
 		signal(2, &sighandler);
 
@@ -137,19 +229,19 @@ void top()
 		{
 
 			double a = a0 + 2.0*pi/kmax * k;
-			systemA( a );
+			systemA( a, 0,0,0, "#FF0000" );
 
 			for ( int j = 0; j < jmax; j++ )
 			{
 
 				double b = b0 + 2.0*pi/jmax * j;
-				systemAB( a, b );
+				systemAB( a, b, 0,0,0, "#00FF00" );
 
 				for ( int i = 0; i < imax; i++ )
 				{
 
 					double c = c0 + 2.0*pi/imax * i;
-					systemABC( a, b, c );
+					systemABC( a, b, c, 0,0,0, "#0000FF" );
 					plot("replot");
 
 					usleep( 750*(100 - speed) );
@@ -165,58 +257,72 @@ void top()
 
 }
 
-void systemA( double a )
+void systemA( double a, double dx, double dy, double dz, const char* color )
 {
+
+	double origin[3] = { dx, dy, dz };
 
 	double rotA[]   = {  cos(a), -sin(a),  0.0,
 	                     sin(a),  cos(a),  0.0,
 	                     0.0,     0.0,     1.0     };	
 
 	vector = transform( rotA, xhat );
-	drawv( 11, "#FF0000", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 11, color, origin, vector );
 
 	vector = transform( rotA, yhat );
-	drawv( 12, "#FF0000", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 12, color, origin, vector );
 
 	vector = transform( rotA, zhat );
-	drawv( 13, "#FF0000", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 13, color, origin, vector );
 
 }
 
-void systemAB( double a, double b )
+void systemAB( double a, double b, double dx, double dy, double dz, const char* color )
 {
+
+	double origin[3] = { dx, dy, dz };
 
 	double rotAB[]  = {  cos(a)*cos(b), -sin(a),  cos(a)*sin(b),
 	                     sin(a)*cos(b),  cos(a),  sin(a)*sin(b),
 	                    -sin(b),         0.0,     cos(b)  };
 
-
 	vector = transform( rotAB, xhat );
-	drawv( 21, "#00FF00", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 21, color, origin, vector );
 
 	vector = transform( rotAB, yhat );
-	drawv( 22, "#00FF00", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 22, color, origin, vector );
 
 	vector = transform( rotAB, zhat );
-	drawv( 23, "#00FF00", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 23, color, origin, vector );
 
 }
 
-void systemABC( double a, double b, double c )
+void systemABC( double a, double b, double c, double dx, double dy, double dz, const char* color )
 {
+
+	double origin[3] = { dx, dy, dz };
 
 	double rotABC[] = {  cos(a)*cos(b)*cos(c) - sin(a)*sin(c), -sin(a)*cos(c) - cos(a)*cos(b)*sin(c),  cos(a)*sin(b),
 	                     sin(a)*cos(b)*cos(c) + cos(a)*sin(c),  cos(a)*cos(c) - sin(a)*cos(b)*sin(c),  sin(a)*sin(b),
 	                    -sin(b)*cos(c),                         sin(b)*sin(c)                       ,  cos(b)         };
 
 	vector = transform( rotABC, xhat );
-	drawv( 31, "#0000FF", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 31, color, origin, vector );
 
 	vector = transform( rotABC, yhat );
-	drawv( 32, "#0000FF", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 32, color, origin, vector );
 
 	vector = transform( rotABC, zhat );
-	drawv( 33, "#0000FF", origin, vector );
+	vector[0] += dx; vector[1] += dy; vector[2] += dz;
+	drawv( 33, color, origin, vector );
 
 }
 
@@ -242,7 +348,7 @@ void printv( double* v )
 
 	for ( int i = 0; i < 3; i++ )
 		printf("[ % 1f ]", v[i]);
-	printf(" %f",length(v));
+	printf(" %f",magv(v));
 	printf("\n");
 
 }
@@ -272,7 +378,7 @@ double* unitv( double* v )
 {
 
 	static double vector[3] = {0.0};
-	double magnitude = length( v );
+	double magnitude = magv( v );
 
 	vector[0] /= magnitude;
 	vector[1] /= magnitude;
@@ -282,17 +388,26 @@ double* unitv( double* v )
 
 }
 
-double length( double* v )
+double magv( double* v )
 {
 
 	return pow( dot(v, v), 0.5 );
 
 }
 
+void zerov( double* v )
+{
+
+	v[0] = 0.0;
+	v[1] = 0.0;
+	v[2] = 0.0;
+
+}
+
 double* transform( double* m, double* v )
 {
 
-	static double vector[3] = {0.0};
+	static double vector[3] = {0};
 
 /*	for ( int j = 0; j < 3; j++ )
 		for ( int i = 0; i < 3; i++ )
@@ -323,7 +438,8 @@ void drawv( int id, const char* color, double* o, double* v )
 {
 
 	char command[128];
-	sprintf(command,"set arrow %d from %f,%f,%f to %f,%f,%f lc rgb \"%s\"", id, o[0],o[1],o[2], o[0]+v[0],o[1]+v[1],o[2]+v[2], color);
+	if ( id <= 0 ) sprintf(command,"set arrow    from %f,%f,%f to %f,%f,%f lc rgb \"%s\"",     o[0],o[1],o[2], v[0],v[1],v[2], color);
+	else           sprintf(command,"set arrow %d from %f,%f,%f to %f,%f,%f lc rgb \"%s\"", id, o[0],o[1],o[2], v[0],v[1],v[2], color);
 	plot(command);
 
 }
